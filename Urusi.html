@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SPEIN VOICE</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto}
+body{background:#0a0a0a;color:#fff;min-height:100vh;padding:12px;padding-bottom:80px}
+.header{display:flex;justify-content:space-between;align-items:center;margin:8px 4px 16px}
+.logo{font-size:30px;font-weight:900;letter-spacing:1px}.logo span{color:#00e5ff}
+.status{background:#1e1e1e;color:#666;padding:8px 16px;border-radius:20px;font-size:12px;font-weight:800}
+.card{background:#161616;border:1px solid #222;border-radius:24px;padding:18px;margin-bottom:14px}
+.card-title{font-weight:800;font-size:14px;margin-bottom:14px;display:flex;gap:8px}
+.beat-box{border:1.8px dashed #333;border-radius:18px;padding:32px 20px;text-align:center;background:#0f0f0f;cursor:pointer}
+.beat-box:hover{border-color:#00e5ff}.beat-plus{font-size:22px;font-weight:900}.beat-sub{color:#777;font-size:12px;margin-top:6px}
+.beat-status{color:#00e5ff;font-size:13px;margin-top:12px}
+.mic-row{display:flex;gap:10px}.btn{border:none;border-radius:14px;padding:16px 12px;font-weight:800;font-size:13px;cursor:pointer;flex:1;display:flex;justify-content:center;align-items:center}
+.btn-cyan{background:#0a3a42;color:#00e5ff;border:1px solid #0e5a62}.btn-dark{background:#1e1e1e;color:#555}
+.effects{display:grid;grid-template-columns:1fr 1fr;gap:10px}.eff{background:#1e1e1e;border:1.5px solid #2a2a2a;border-radius:14px;padding:14px;cursor:pointer}.eff.active{border-color:#00e5ff;background:#0a2a30}.eff-name{font-weight:900;font-size:14px}.eff-desc{font-size:11px;color:#777;margin-top:3px}
+.mixer-label{display:flex;justify-content:space-between;font-size:13px;margin:14px 0 8px;color:#aaa}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:#2a2a2a;border-radius:10px}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#00e5ff;box-shadow:0 0 10px #00e5ff}
+.timer{font-size:44px;font-weight:900;letter-spacing:2px;text-align:center;margin:8px 0}
+.btn-record{background:#3a1020;color:#ff5577;padding:18px;border-radius:16px;font-size:15px;width:100%;border:none;font-weight:900;cursor:pointer}.btn-record.ready{background:#ff1744;color:#fff;box-shadow:0 0 20px #ff174466}
+.btn-stop{background:#222;color:#777;padding:14px;border-radius:14px;width:100%;border:none;font-weight:800;margin-top:10px;cursor:pointer}
+.help{color:#555;font-size:12px;text-align:center;margin-top:10px}
+.your-row{display:flex;gap:10px}.btn-play{background:#1a2a5a;color:#5577ff;border:none;border-radius:14px;padding:16px;flex:1;font-weight:800}.btn-down{background:#2a1a5a;color:#aa66ff;border:none;border-radius:14px;padding:16px;flex:1;font-weight:800}
+</style>
+</head>
+<body>
+<div class="header"><div class="logo">SPEIN <span>VOICE</span></div><div class="status" id="topStatus">READY</div></div>
+
+<div class="card">
+<div class="card-title">🎵 BEAT</div>
+<div class="beat-box" onclick="document.getElementById('beatInput').click()">
+<div class="beat-plus">+ CHAGUA BEAT</div>
+<div class="beat-sub">MP3 • WAV • M4A</div>
+<input type="file" id="beatInput" accept="audio/*" hidden>
+</div>
+<div class="beat-status" id="beatName">Hakuna beat iliyochaguliwa</div>
+<audio id="beatAudio"></audio>
+</div>
+
+<div class="card">
+<div class="card-title">🎤 MICROPHONE</div>
+<div class="mic-row">
+<button class="btn btn-cyan" id="enableMic">🎤 ENABLE MICROPHONE</button>
+<button class="btn btn-dark" id="playBeatBtn">▶ PLAY BEAT</button>
+</div>
+<div class="help" id="micHelp">Bonyeza Enable Microphone kuruhusu SPEIN VOICE kutumia mic.</div>
+</div>
+
+<div class="card">
+<div class="card-title">🎛️ VOICE EFFECTS</div>
+<div class="effects">
+<div class="eff active" data-eff="normal"><div class="eff-name">🎙️ NORMAL</div><div class="eff-desc">Clean voice</div></div>
+<div class="eff" data-eff="echo"><div class="eff-name">🔊 ECHO</div><div class="eff-desc">Delay effect</div></div>
+<div class="eff" data-eff="reverb"><div class="eff-name">🌌 REVERB</div><div class="eff-desc">Room effect</div></div>
+<div class="eff" data-eff="robot"><div class="eff-name">🤖 ROBOT</div><div class="eff-desc">Voice effect</div></div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">🎚️ MIXER</div>
+<div class="mixer-label"><span>Beat Volume</span><span id="beatVolTxt">80%</span></div>
+<input type="range" id="beatVol" min="0" max="100" value="80">
+<div class="mixer-label"><span>Voice Volume</span><span id="voiceVolTxt">100%</span></div>
+<input type="range" id="voiceVol" min="0" max="100" value="100">
+</div>
+
+<div class="card" style="text-align:center">
+<div class="timer" id="timer">00:00</div>
+<button class="btn-record" id="recBtn">🔵 START RECORDING</button>
+<button class="btn-stop" id="stopBtn">⏹ STOP</button>
+<div class="help">Enable microphone kwanza.</div>
+</div>
+
+<div class="card">
+<div class="card-title">🎧 YOUR RECORDING</div>
+<div class="your-row">
+<button class="btn-play" id="playRec" disabled>▶ PLAY RECORDING</button>
+<button class="btn-down" id="downRec" disabled>⬇ DOWNLOAD</button>
+</div>
+<div class="help" id="recHelp">Hakuna recording bado.</div>
+<audio id="recAudio" controls style="width:100%;margin-top:12px;display:none"></audio>
+</div>
+
+<script>
+let audioCtx, micStream, micSource, beatGain, voiceGain, dest, mediaRecorder, chunks=[], recBlob;
+let isMicEnabled=false,isRecording=false,timerInt,sec=0,currentEff='normal';
+let echoNode,reverbNode;
+
+async function initAudio(){
+ audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+ beatGain=audioCtx.createGain();voiceGain=audioCtx.createGain();
+ beatGain.gain.value=0.8;voiceGain.gain.value=1;dest=audioCtx.createMediaStreamDestination();
+}
+function makeReverb(){
+ reverbNode=audioCtx.createConvolver();
+ let rate=audioCtx.sampleRate,len=rate*2.5,impulse=audioCtx.createBuffer(2,len,rate);
+ for(let c=0;c<2;c++){let ch=impulse.getChannelData(c);for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*Math.pow(1-i/len,1.5)}
+ reverbNode.buffer=impulse;
+}
+function connectEffect(){
+ if(!micSource)return;
+ try{micSource.disconnect()}catch{}
+ if(!reverbNode)makeReverb();
+ if(!echoNode){echoNode=audioCtx.createDelay(1);echoNode.delayTime.value=0.32;let fb=audioCtx.createGain();fb.gain.value=0.35;echoNode.connect(fb);fb.connect(echoNode);}
+ if(currentEff==='normal'){micSource.connect(voiceGain)}
+ else if(currentEff==='echo'){micSource.connect(echoNode);echoNode.connect(voiceGain);micSource.connect(voiceGain)}
+ else if(currentEff==='reverb'){micSource.connect(reverbNode);reverbNode.connect(voiceGain);micSource.connect(voiceGain)}
+ else if(currentEff==='robot'){let shaper=audioCtx.createWaveShaper();shaper.curve=((a)=>{let k=400,n=44100,curve=new Float32Array(n);for(let i=0;i<n;++i){let x=i*2/n-1;curve[i]=(3+k)*x*20*Math.PI/180/(Math.PI+k*Math.abs(x))}return curve})();micSource.connect(shaper);shaper.connect(voiceGain)}
+ voiceGain.connect(dest);voiceGain.connect(audioCtx.destination);
+}
+
+document.getElementById('enableMic').onclick=async()=>{
+ await initAudio();
+ try{
+  micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+  micSource=audioCtx.createMediaStreamSource(micStream);connectEffect();
+  isMicEnabled=true;
+  document.getElementById('enableMic').style.background='#00e5ff';document.getElementById('enableMic').style.color='#000';
+  document.getElementById('enableMic').innerText='✓ MIC IMEWASHWA';
+  document.getElementById('micHelp').innerText='Mic imewashwa! Tayari kurecord.';document.getElementById('recBtn').classList.add('ready');
+ }catch(e){alert('Ruhusa ya mic imekataliwa: '+e.message)}
+};
+document.querySelectorAll('.eff').forEach(el=>{
+ el.onclick=()=>{document.querySelectorAll('.eff').forEach(x=>x.classList.remove('active'));el.classList.add('active');currentEff=el.dataset.eff;if(isMicEnabled)connectEffect()}
+});
+document.getElementById('beatInput').onchange=e=>{
+ let f=e.target.files[0];if(!f)return;
+ document.getElementById('beatName').innerText='✓ '+f.name;document.getElementById('beatName').style.color='#00ff88';
+ document.getElementById('beatAudio').src=URL.createObjectURL(f);
+};
+document.getElementById('playBeatBtn').onclick=()=>{
+ let a=document.getElementById('beatAudio');if(!a.src){alert('Chagua beat kwanza!');return}
+ if(a.paused){a.play();document.getElementById('playBeatBtn').innerText='⏸ PAUSE BEAT'}else{a.pause();document.getElementById('playBeatBtn').innerText='▶ PLAY BEAT'}
+};
+document.getElementById('beatVol').oninput=e=>{let v=e.target.value;document.getElementById('beatVolTxt').innerText=v+'%';if(beatGain)beatGain.gain.value=v/100;document.getElementById('beatAudio').volume=v/100};
+document.getElementById('voiceVol').oninput=e=>{let v=e.target.value;document.getElementById('voiceVolTxt').innerText=v+'%';if(voiceGain)voiceGain.gain.value=v/100};
+
+document.getElementById('recBtn').onclick=()=>{
+ if(!isMicEnabled){alert('Enable microphone kwanza!');return}if(isRecording)return;
+ chunks=[];sec=0;
+ mediaRecorder=new MediaRecorder(dest.stream);
+ mediaRecorder.ondataavailable=ev=>chunks.push(ev.data);
+ mediaRecorder.onstop=()=>{
+  recBlob=new Blob(chunks,{type:'audio/webm'});
+  let url=URL.createObjectURL(recBlob);
+  let ra=document.getElementById('recAudio');ra.src=url;ra.style.display='block';
+  document.getElementById('playRec').disabled=false;document.getElementById('downRec').disabled=false;
+  document.getElementById('recHelp').innerText='✓ Recording tayari!';document.getElementById('recHelp').style.color='#00ff88';
+ };
+ mediaRecorder.start();isRecording=true;
+ document.getElementById('recBtn').innerText='🔴 INARECORD...';document.getElementById('topStatus').innerText='REC ●';
+ document.getElementById('beatAudio').play().catch(()=>{});
+ timerInt=setInterval(()=>{sec++;let m=String(Math.floor(sec/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0');document.getElementById('timer').innerText=m+':'+s},1000);
+};
+document.getElementById('stopBtn').onclick=()=>{
+ if(!isRecording)return;
+ mediaRecorder.stop();isRecording=false;clearInterval(timerInt);
+ document.getElementById('recBtn').innerText='🔵 START RECORDING';document.getElementById('topStatus').innerText='READY';
+ document.getElementById('beatAudio').pause();
+};
+document.getElementById('playRec').onclick=()=>document.getElementById('recAudio').play();
+document.getElementById('downRec').onclick=()=>{
+ if(!recBlob)return;let a=document.createElement('a');a.href=URL.createObjectURL(recBlob);a.download='spein-voice-'+Date.now()+'.webm';a.click();
+};
+</script>
+</body>
+</html>
