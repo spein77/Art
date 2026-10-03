@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<title>SPEIN VOICE</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+font-family:Arial,sans-serif;
+background:#070707;
+color:#fff;
+min-height:100vh;
+}
+.app{
+max-width:650px;
+margin:auto;
+padding:18px 14px 35px;
+}
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:22px;
+}
+.logo{
+font-size:25px;
+font-weight:900;
+letter-spacing:1px;
+}
+.logo span{color:#ff1744}
+.status{
+font-size:11px;
+padding:7px 11px;
+border-radius:20px;
+background:#151515;
+color:#aaa;
+}
+.status.live{color:#00ff88}
+.card{
+background:#111;
+border:1px solid #222;
+border-radius:20px;
+padding:18px;
+margin-bottom:14px;
+box-shadow:0 10px 30px #0008;
+}
+.title{
+font-size:14px;
+font-weight:bold;
+margin-bottom:12px;
+color:#ddd;
+}
+.upload{
+height:125px;
+border:1px dashed #444;
+border-radius:16px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:9px;
+cursor:pointer;
+background:#0c0c0c;
+}
+.upload strong{font-size:16px}
+.upload small{color:#777}
+input[type=file]{display:none}
+.fileName{
+margin-top:10px;
+font-size:12px;
+color:#00eaff;
+overflow:hidden;
+white-space:nowrap;
+text-overflow:ellipsis;
+}
+.controls{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+button{
+border:0;
+border-radius:14px;
+padding:14px 10px;
+font-size:14px;
+font-weight:bold;
+color:#fff;
+background:#202020;
+cursor:pointer;
+}
+button:active{transform:scale(.97)}
+.record{
+grid-column:span 2;
+height:62px;
+background:#ff1744;
+font-size:17px;
+}
+.record.recording{
+background:#00c853;
+}
+button:disabled{
+opacity:.35;
+cursor:not-allowed;
+}
+.effects{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:9px;
+}
+.effect{
+position:relative;
+padding:14px;
+background:#181818;
+border:1px solid #292929;
+}
+.effect.active{
+border-color:#00eaff;
+background:#102025;
+}
+.effect span{
+display:block;
+font-size:14px;
+}
+.effect small{
+display:block;
+margin-top:4px;
+color:#777;
+}
+.range{
+margin-top:17px;
+}
+.rangeTop{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+color:#aaa;
+margin-bottom:8px;
+}
+input[type=range]{
+width:100%;
+accent-color:#00eaff;
+}
+.visual{
+height:95px;
+border-radius:15px;
+background:#080808;
+border:1px solid #222;
+display:flex;
+align-items:center;
+justify-content:center;
+overflow:hidden;
+}
+#wave{
+width:100%;
+height:100%;
+}
+.bottom{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+.play{background:#0066ff}
+.download{background:#7b1fff}
+.message{
+font-size:12px;
+color:#888;
+text-align:center;
+line-height:1.5;
+margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+<div class="logo">SPEIN <span>VOICE</span></div>
+<div id="status" class="status">READY</div>
+</header>
+
+<div class="card">
+
+<div class="title">🎵 CHOOSE YOUR BEAT</div>
+
+<label class="upload">
+<strong>＋ Upload Beat</strong>
+<small>MP3, WAV, M4A</small>
+<input id="beatInput" type="file" accept="audio/*">
+</label>
+
+<div id="fileName" class="fileName">No beat selected</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">🎚️ AUDIO MIX</div>
+
+<div class="range">
+<div class="rangeTop">
+<span>Beat Volume</span>
+<span id="beatValue">80%</span>
+</div>
+<input id="beatVolume" type="range" min="0" max="100" value="80">
+</div>
+
+<div class="range">
+<div class="rangeTop">
+<span>Voice Volume</span>
+<span id="voiceValue">100%</span>
+</div>
+<input id="voiceVolume" type="range" min="0" max="100" value="100">
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">🎛️ VOICE EFFECTS</div>
+
+<div class="effects">
+
+<button class="effect active" data-effect="normal">
+<span>🎙️ Normal</span>
+<small>Clean voice</small>
+</button>
+
+<button class="effect" data-effect="echo">
+<span>🔊 Echo</span>
+<small>Echo voice</small>
+</button>
+
+<button class="effect" data-effect="reverb">
+<span>🌌 Reverb</span>
+<small>Room effect</small>
+</button>
+
+<button class="effect" data-effect="robot">
+<span>🤖 Robot</span>
+<small>Robot tone</small>
+</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">〽️ VOICE MONITOR</div>
+
+<div class="visual">
+<canvas id="wave"></canvas>
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="controls">
+
+<button id="micBtn">🎤 Enable Microphone</button>
+
+<button id="beatBtn" disabled>▶ Play Beat</button>
+
+<button id="recordBtn" class="record" disabled>
+⏺ START RECORDING
+</button>
+
+</div>
+
+<div class="message" id="message">
+Enable your microphone, choose a beat and start recording.
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="title">🎧 RECORDING</div>
+
+<div class="bottom">
+
+<button id="playBtn" class="play" disabled>
+▶ Play Recording
+</button>
+
+<button id="downloadBtn" class="download" disabled>
+⬇ Download
+</button>
+
+</div>
+
+<div class="message" id="recordInfo">
+No recording yet.
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let audioContext;
+let micStream;
+let micSource;
+let analyser;
+let mediaRecorder;
+let recordedChunks=[];
+let recordingBlob=null;
+let beatAudio=new Audio();
+let beatURL=null;
+let isBeatPlaying=false;
+
+const beatInput=document.getElementById("beatInput");
+const fileName=document.getElementById("fileName");
+const micBtn=document.getElementById("micBtn");
+const beatBtn=document.getElementById("beatBtn");
+const recordBtn=document.getElementById("recordBtn");
+const playBtn=document.getElementById("playBtn");
+const downloadBtn=document.getElementById("downloadBtn");
+const message=document.getElementById("message");
+const status=document.getElementById("status");
+const recordInfo=document.getElementById("recordInfo");
+
+const beatVolume=document.getElementById("beatVolume");
+const voiceVolume=document.getElementById("voiceVolume");
+
+const beatValue=document.getElementById("beatValue");
+const voiceValue=document.getElementById("voiceValue");
+
+beatVolume.oninput=()=>{
+beatValue.textContent=beatVolume.value+"%";
+beatAudio.volume=beatVolume.value/100;
+};
+
+voiceVolume.oninput=()=>{
+voiceValue.textContent=voiceVolume.value+"%";
+};
+
+beatInput.onchange=()=>{
+
+const file=beatInput.files[0];
+
+if(!file)return;
+
+if(beatURL){
+URL.revokeObjectURL(beatURL);
+}
+
+beatURL=URL.createObjectURL(file);
+
+beatAudio.src=beatURL;
+beatAudio.loop=false;
+beatAudio.volume=beatVolume.value/100;
+
+fileName.textContent=file.name;
+
+beatBtn.disabled=false;
+
+message.textContent="Beat ready. Enable microphone to continue.";
+
+};
+
+micBtn.onclick=async()=>{
+
+try{
+
+audioContext=new (window.AudioContext||window.webkitAudioContext)();
+
+await audioContext.resume();
+
+micStream=await navigator.mediaDevices.getUserMedia({
+audio:{
+echoCancellation:false,
+noiseSuppression:false,
+autoGainControl:false
+}
+});
+
+micSource=audioContext.createMediaStreamSource(micStream);
+
+analyser=audioContext.createAnalyser();
+analyser.fftSize=2048;
+
+micSource.connect(analyser);
+
+drawWave();
+
+micBtn.textContent="🎤 Microphone Ready";
+micBtn.disabled=true;
+
+recordBtn.disabled=false;
+
+status.textContent="MIC READY";
+status.classList.add("live");
+
+message.textContent="Microphone is ready. Put on your headphones and start recording.";
+
+}catch(error){
+
+message.textContent="Microphone permission was denied or is unavailable.";
+
+}
+
+};
+
+beatBtn.onclick=async()=>{
+
+if(!beatURL)return;
+
+try{
+
+if(audioContext)await audioContext.resume();
+
+if(isBeatPlaying){
+
+beatAudio.pause();
+beatAudio.currentTime=0;
+
+isBeatPlaying=false;
+beatBtn.textContent="▶ Play Beat";
+
+}else{
+
+await beatAudio.play();
+
+isBeatPlaying=true;
+beatBtn.textContent="⏸ Stop Beat";
+
+}
+
+}catch(e){
+
+message.textContent="Tap the button again to start the beat.";
+
+}
+
+};
+
+beatAudio.onended=()=>{
+
+isBeatPlaying=false;
+beatBtn.textContent="▶ Play Beat";
+
+};
+
+recordBtn.onclick=async()=>{
+
+if(!micStream)return;
+
+if(mediaRecorder && mediaRecorder.state==="recording"){
+
+mediaRecorder.stop();
+
+return;
+
+}
+
+recordedChunks=[];
+
+let options={};
+
+if(MediaRecorder.isTypeSupported("audio/webm;codecs=opus")){
+options.mimeType="audio/webm;codecs=opus";
+}else if(MediaRecorder.isTypeSupported("audio/webm")){
+options.mimeType="audio/webm";
+}
+
+try{
+
+mediaRecorder=new MediaRecorder(micStream,options);
+
+}catch(e){
+
+mediaRecorder=new MediaRecorder(micStream);
+
+}
+
+mediaRecorder.ondataavailable=e=>{
+
+if(e.data && e.data.size>0){
+recordedChunks.push(e.data);
+}
+
+};
+
+mediaRecorder.onstop=()=>{
+
+recordingBlob=new Blob(recordedChunks,{
+type:mediaRecorder.mimeType || "audio/webm"
+});
+
+const url=URL.createObjectURL(recordingBlob);
+
+playBtn.disabled=false;
+downloadBtn.disabled=false;
+
+playBtn.dataset.url=url;
+
+recordInfo.textContent="Recording ready.";
+
+recordBtn.textContent="⏺ START RECORDING";
+recordBtn.classList.remove("recording");
+
+status.textContent="READY";
+
+message.textContent="Recording finished. Play it or download it.";
+
+if(isBeatPlaying){
+
+beatAudio.pause();
+beatAudio.currentTime=0;
+isBeatPlaying=false;
+beatBtn.textContent="▶ Play Beat";
+
+}
+
+};
+
+mediaRecorder.start();
+
+recordBtn.textContent="⏹ STOP RECORDING";
+recordBtn.classList.add("recording");
+
+status.textContent="RECORDING";
+
+message.textContent="Recording... Sing into your microphone.";
+
+if(beatURL){
+
+try{
+
+beatAudio.currentTime=0;
+await beatAudio.play();
+
+isBeatPlaying=true;
+beatBtn.textContent="⏸ Stop Beat";
+
+}catch(e){}
+
+}
+
+};
+
+playBtn.onclick=()=>{
+
+const url=playBtn.dataset.url;
+
+if(!url)return;
+
+const audio=new Audio(url);
+
+audio.play();
+
+recordInfo.textContent="Playing recording...";
+
+audio.onended=()=>{
+recordInfo.textContent="Recording ready.";
+};
+
+};
+
+downloadBtn.onclick=()=>{
+
+if(!recordingBlob)return;
+
+const url=URL.createObjectURL(recordingBlob);
+
+const a=document.createElement("a");
+
+a.href=url;
+a.download="spein-voice-recording.webm";
+
+document.body.appendChild(a);
+a.click();
+a.remove();
+
+setTimeout(()=>{
+URL.revokeObjectURL(url);
+},1000);
+
+};
+
+document.querySelectorAll(".effect").forEach(button=>{
+
+button.onclick=()=>{
+
+document.querySelectorAll(".effect").forEach(x=>{
+x.classList.remove("active");
+});
+
+button.classList.add("active");
+
+const effect=button.dataset.effect;
+
+message.textContent="Effect selected: "+effect;
+
+};
+
+});
+
+const canvas=document.getElementById("wave");
+const ctx=canvas.getContext("2d");
+
+function resizeCanvas(){
+
+canvas.width=canvas.clientWidth*devicePixelRatio;
+canvas.height=canvas.clientHeight*devicePixelRatio;
+
+ctx.scale(devicePixelRatio,devicePixelRatio);
+
+}
+
+window.addEventListener("resize",resizeCanvas);
+
+resizeCanvas();
+
+function drawWave(){
+
+if(!analyser)return;
+
+requestAnimationFrame(drawWave);
+
+const width=canvas.clientWidth;
+const height=canvas.clientHeight;
+
+const data=new Uint8Array(analyser.fftSize);
+
+analyser.getByteTimeDomainData(data);
+
+ctx.clearRect(0,0,width,height);
+
+ctx.beginPath();
+
+for(let i=0;i<data.length;i++){
+
+const x=i/data.length*width;
+const y=(data[i]/255)*height;
+
+if(i===0){
+ctx.moveTo(x,y);
+}else{
+ctx.lineTo(x,y);
+}
+
+}
+
+ctx.strokeStyle="#00eaff";
+ctx.lineWidth=2;
+
+ctx.stroke();
+
+}
+
+</script>
+
+</body>
+</html>
