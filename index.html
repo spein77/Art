@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07070a">
+<title>SPEIN VOICE</title>
+
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#07070a;color:#fff;font-family:Arial,sans-serif}
+body{min-height:100vh}
+.app{width:100%;max-width:680px;margin:auto;padding:16px 14px 35px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.logo{font-size:25px;font-weight:900;letter-spacing:1px}
+.logo b{color:#00eaff}
+.status{font-size:11px;padding:8px 12px;border-radius:30px;background:#17171c;color:#999}
+.status.ok{color:#00ff91}
+.status.rec{color:#ff3155}
+
+.card{
+background:linear-gradient(145deg,#121216,#0d0d10);
+border:1px solid #24242b;
+border-radius:22px;
+padding:17px;
+margin-bottom:13px;
+box-shadow:0 12px 35px #0009
+}
+
+.label{
+font-size:13px;
+font-weight:800;
+margin-bottom:12px;
+color:#ddd
+}
+
+.upload{
+height:105px;
+border:1px dashed #3a3a43;
+border-radius:17px;
+display:flex;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+gap:7px;
+background:#0a0a0d;
+cursor:pointer
+}
+
+.upload strong{font-size:16px}
+.upload small{font-size:11px;color:#777}
+input[type=file]{display:none}
+
+.filename{
+font-size:12px;
+color:#00eaff;
+margin-top:10px;
+overflow:hidden;
+white-space:nowrap;
+text-overflow:ellipsis
+}
+
+.grid2{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+
+button{
+width:100%;
+border:0;
+padding:14px 10px;
+border-radius:15px;
+background:#202026;
+color:#fff;
+font-size:13px;
+font-weight:800;
+cursor:pointer
+}
+
+button:active{transform:scale(.98)}
+button:disabled{opacity:.35}
+
+.mic{background:#005d70}
+.record{grid-column:1/-1;background:#d9163d;font-size:16px;padding:17px}
+.record.active{background:#00a95c}
+
+.play{background:#075fd8}
+.download{background:#7024d8}
+
+.effects{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px
+}
+
+.effect{
+background:#18181d;
+border:1px solid #292930;
+text-align:left
+}
+
+.effect.active{
+border-color:#00eaff;
+background:#10272c
+}
+
+.effect span{display:block;font-size:14px}
+.effect small{display:block;color:#777;margin-top:4px;font-weight:normal}
+
+.control{margin-top:14px}
+.row{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+color:#aaa;
+margin-bottom:7px
+}
+
+input[type=range]{width:100%;accent-color:#00eaff}
+
+canvas{
+width:100%;
+height:105px;
+display:block;
+background:#050507;
+border-radius:15px;
+border:1px solid #24242a
+}
+
+.message{
+text-align:center;
+font-size:11px;
+line-height:1.5;
+color:#85858d;
+margin-top:12px
+}
+
+.timer{
+text-align:center;
+font-size:27px;
+font-weight:900;
+letter-spacing:2px;
+margin-bottom:12px
+}
+
+.note{
+font-size:10px;
+line-height:1.5;
+color:#666;
+margin-top:12px;
+text-align:center
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+<div class="logo">SPEIN <b>VOICE</b></div>
+<div id="status" class="status">READY</div>
+</header>
+
+<div class="card">
+
+<div class="label">🎵 BEAT</div>
+
+<label class="upload">
+<strong>＋ CHAGUA BEAT</strong>
+<small>MP3 • WAV • M4A</small>
+<input id="beatFile" type="file" accept="audio/*">
+</label>
+
+<div id="filename" class="filename">Hakuna beat iliyochaguliwa</div>
+
+</div>
+
+<div class="card">
+
+<div class="label">🎤 MICROPHONE</div>
+
+<div class="grid2">
+
+<button id="micButton" class="mic">
+🎤 ENABLE MICROPHONE
+</button>
+
+<button id="beatButton" disabled>
+▶ PLAY BEAT
+</button>
+
+</div>
+
+<div id="micMessage" class="message">
+Bonyeza Enable Microphone kuruhusu SPEIN VOICE kutumia mic.
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="label">🎛️ VOICE EFFECTS</div>
+
+<div class="effects">
+
+<button class="effect active" data-effect="normal">
+<span>🎙️ NORMAL</span>
+<small>Clean voice</small>
+</button>
+
+<button class="effect" data-effect="echo">
+<span>🔊 ECHO</span>
+<small>Delay effect</small>
+</button>
+
+<button class="effect" data-effect="reverb">
+<span>🌌 REVERB</span>
+<small>Room effect</small>
+</button>
+
+<button class="effect" data-effect="robot">
+<span>🤖 ROBOT</span>
+<small>Voice effect</small>
+</button>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="label">〽️ VOICE MONITOR</div>
+
+<canvas id="visualizer"></canvas>
+
+</div>
+
+<div class="card">
+
+<div class="label">🎚️ MIXER</div>
+
+<div class="control">
+<div class="row">
+<span>Beat Volume</span>
+<span id="beatVolText">80%</span>
+</div>
+<input id="beatVolume" type="range" min="0" max="100" value="80">
+</div>
+
+<div class="control">
+<div class="row">
+<span>Voice Volume</span>
+<span id="voiceVolText">100%</span>
+</div>
+<input id="voiceVolume" type="range" min="0" max="100" value="100">
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="timer" id="timer">00:00</div>
+
+<div class="grid2">
+
+<button id="recordButton" class="record" disabled>
+⏺ START RECORDING
+</button>
+
+<button id="stopButton" disabled>
+⏹ STOP
+</button>
+
+</div>
+
+<div id="recordMessage" class="message">
+Enable microphone kwanza.
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="label">🎧 YOUR RECORDING</div>
+
+<div class="grid2">
+
+<button id="playRecording" class="play" disabled>
+▶ PLAY RECORDING
+</button>
+
+<button id="downloadRecording" class="download" disabled>
+⬇ DOWNLOAD
+</button>
+
+</div>
+
+<div id="resultMessage" class="message">
+Hakuna recording bado.
+</div>
+
+<div class="note">
+Kwa live monitoring tumia headphones ili beat isirudi kwenye microphone.
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+let ctx=null;
+let micStream=null;
+let micSource=null;
+let micGain=null;
+
+let analyser=null;
+
+let beatElement=null;
+let beatSource=null;
+let beatGain=null;
+
+let effectInput=null;
+let effectOutput=null;
+
+let delayNode=null;
+let delayFeedback=null;
+let convolver=null;
+let distortion=null;
+
+let recordDestination=null;
+let recorder=null;
+let chunks=[];
+let recordingBlob=null;
+let recordingURL=null;
+
+let beatURL=null;
+let recordingStart=0;
+let timerInterval=null;
+
+let currentEffect="normal";
+
+const micButton=document.getElementById("micButton");
+const beatButton=document.getElementById("beatButton");
+const beatFile=document.getElementById("beatFile");
+const filename=document.getElementById("filename");
+
+const recordButton=document.getElementById("recordButton");
+const stopButton=document.getElementById("stopButton");
+
+const playRecording=document.getElementById("playRecording");
+const downloadRecording=document.getElementById("downloadRecording");
+
+const status=document.getElementById("status");
+const micMessage=document.getElementById("micMessage");
+const recordMessage=document.getElementById("recordMessage");
+const resultMessage=document.getElementById("resultMessage");
+
+const beatVolume=document.getElementById("beatVolume");
+const voiceVolume=document.getElementById("voiceVolume");
+
+const beatVolText=document.getElementById("beatVolText");
+const voiceVolText=document.getElementById("voiceVolText");
+
+const timer=document.getElementById("timer");
+
+const canvas=document.getElementById("visualizer");
+const canvasCtx=canvas.getContext("2d");
+
+function setStatus(text,type=""){
+status.textContent=text;
+status.className="status "+type;
+}
+
+function showError(message){
+micMessage.textContent=message;
+recordMessage.textContent=message;
+}
+
+async function createAudioSystem(){
+
+if(ctx){
+if(ctx.state==="suspended"){
+await ctx.resume();
+}
+return;
+}
+
+const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+
+if(!AudioContextClass){
+throw new Error("Browser yako hai-support Web Audio.");
+}
+
+ctx=new AudioContextClass();
+
+await ctx.resume();
+
+micGain=ctx.createGain();
+beatGain=ctx.createGain();
+
+micGain.gain.value=1;
+beatGain.gain.value=.8;
+
+effectInput=ctx.createGain();
+effectOutput=ctx.createGain();
+
+delayNode=ctx.createDelay(5);
+delayNode.delayTime.value=.28;
+
+delayFeedback=ctx.createGain();
+delayFeedback.gain.value=.28;
+
+convolver=ctx.createConvolver();
+
+const impulseLength=ctx.sampleRate*2.2;
+const impulse=ctx.createBuffer(
+2,
+impulseLength,
+ctx.sampleRate
+);
+
+for(let channel=0;channel<2;channel++){
+
+const data=impulse.getChannelData(channel);
+
+for(let i=0;i<impulseLength;i++){
+
+data[i]=(Math.random()*2-1)*
+Math.pow(1-i/impulseLength,2.5);
+
+}
+
+}
+
+convolver.buffer=impulse;
+
+distortion=ctx.createWaveShaper();
+
+const curve=new Float32Array(44100);
+
+for(let i=0;i<curve.length;i++){
+
+const x=i*2/curve.length-1;
+
+curve[i]=Math.tanh(x*3);
+
+}
+
+distortion.curve=curve;
+distortion.oversample="4x";
+
+analyser=ctx.createAnalyser();
+analyser.fftSize=2048;
+
+recordDestination=ctx.createMediaStreamDestination();
+
+buildNormalGraph();
+
+effectInput.connect(analyser);
+
+analyser.connect(ctx.destination);
+
+effectOutput.connect(recordDestination);
+
+beatGain.connect(ctx.destination);
+beatGain.connect(recordDestination);
+
+}
+
+function disconnectEffectNodes(){
+
+try{effectInput.disconnect()}catch(e){}
+try{effectOutput.disconnect()}catch(e){}
+try{delayNode.disconnect()}catch(e){}
+try{delayFeedback.disconnect()}catch(e){}
+try{convolver.disconnect()}catch(e){}
+try{distortion.disconnect()}catch(e){}
+}
+
+function buildNormalGraph(){
+
+disconnectEffectNodes();
+
+effectInput.connect(effectOutput);
+
+}
+
+function buildEchoGraph(){
+
+disconnectEffectNodes();
+
+effectInput.connect(effectOutput);
+
+effectInput.connect(delayNode);
+
+delayNode.connect(delayFeedback);
+delayFeedback.connect(delayNode);
+delayNode.connect(effectOutput);
+
+}
+
+function buildReverbGraph(){
+
+disconnectEffectNodes();
+
+effectInput.connect(effectOutput);
+effectInput.connect(convolver);
+convolver.connect(effectOutput);
+
+}
+
+function buildRobotGraph(){
+
+disconnectEffectNodes();
+
+effectInput.connect(distortion);
+distortion.connect(effectOutput);
+
+}
+
+function selectEffect(effect){
+
+currentEffect=effect;
+
+if(!ctx)return;
+
+if(effect==="normal"){
+buildNormalGraph();
+}
+
+if(effect==="echo"){
+buildEchoGraph();
+}
+
+if(effect==="reverb"){
+buildReverbGraph();
+}
+
+if(effect==="robot"){
+buildRobotGraph();
+}
+
+}
+
+document.querySelectorAll(".effect").forEach(button=>{
+
+button.addEventListener("click",()=>{
+
+document.querySelectorAll(".effect").forEach(b=>{
+b.classList.remove("active");
+});
+
+button.classList.add("active");
+
+selectEffect(button.dataset.effect);
+
+});
+
+});
+
+micButton.addEventListener("click",async()=>{
+
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+
+showError("Browser hii hairuhusu microphone. Fungua SPEIN VOICE kupitia HTTPS kwenye Chrome.");
+return;
+
+}
+
+try{
+
+await createAudioSystem();
+
+if(micStream){
+
+micStream.getTracks().forEach(track=>track.stop());
+
+}
+
+micStream=await navigator.mediaDevices.getUserMedia({
+audio:{
+channelCount:1,
+echoCancellation:false,
+noiseSuppression:false,
+autoGainControl:false
+},
+video:false
+});
+
+micSource=ctx.createMediaStreamSource(micStream);
+
+micSource.connect(micGain);
+micGain.connect(effectInput);
+
+selectEffect(currentEffect);
+
+micButton.textContent="🎤 MICROPHONE READY";
+micButton.disabled=true;
+
+recordButton.disabled=false;
+
+setStatus("MIC READY","ok");
+
+micMessage.textContent="Microphone iko tayari. Tumia headphones kwa matokeo mazuri.";
+
+recordMessage.textContent="Uko tayari kurecord.";
+
+}catch(error){
+
+console.log(error);
+
+if(error.name==="NotAllowedError"){
+
+showError("Microphone imekataliwa. Ruhusu Microphone kwa Chrome kwenye Settings → Apps → Chrome → Permissions → Microphone.");
+
+}else if(error.name==="NotFoundError"){
+
+showError("Hakuna microphone iliyopatikana kwenye simu hii.");
+
+}else if(error.name==="NotReadableError"){
+
+showError("Microphone inatumiwa na app nyingine. Funga recorder/call/app nyingine kisha jaribu tena.");
+
+}else if(error.name==="SecurityError"){
+
+showError("Ukurasa huu hauna ruhusa ya microphone. Tumia HTTPS/Vercel.");
+
+}else{
+
+showError("Microphone haikuweza kuanzishwa: "+error.message);
+
+}
+
+}
+
+});
+
+beatFile.addEventListener("change",async()=>{
+
+const file=beatFile.files[0];
+
+if(!file)return;
+
+if(beatURL){
+URL.revokeObjectURL(beatURL);
+}
+
+beatURL=URL.createObjectURL(file);
+
+beatElement=new Audio();
+beatElement.src=beatURL;
+beatElement.preload="auto";
+beatElement.loop=false;
+beatElement.volume=1;
+
+filename.textContent=file.name;
+
+beatButton.disabled=false;
+
+try{
+
+await createAudioSystem();
+
+if(beatSource){
+try{beatSource.disconnect()}catch(e){}
+}
+
+beatSource=ctx.createMediaElementSource(beatElement);
+
+beatSource.connect(beatGain);
+
+beatGain.gain.value=Number(beatVolume.value)/100;
+
+}catch(error){
+
+console.log(error);
+
+}
+
+});
+
+beatButton.addEventListener("click",async()=>{
+
+if(!beatElement)return;
+
+try{
+
+await createAudioSystem();
+await ctx.resume();
+
+if(beatElement.paused){
+
+await beatElement.play();
+
+beatButton.textContent="⏸ STOP BEAT";
+
+}else{
+
+beatElement.pause();
+beatButton.textContent="▶ PLAY BEAT";
+
+}
+
+}catch(error){
+
+micMessage.textContent="Beat haikuweza kuanza. Gusa PLAY BEAT tena.";
+
+}
+
+});
+
+beatElement?.addEventListener?.("ended",()=>{
+beatButton.textContent="▶ PLAY BEAT";
+});
+
+beatVolume.addEventListener("input",()=>{
+
+const value=Number(beatVolume.value);
+
+beatVolText.textContent=value+"%";
+
+if(beatGain){
+beatGain.gain.value=value/100;
+}
+
+});
+
+voiceVolume.addEventListener("input",()=>{
+
+const value=Number(voiceVolume.value);
+
+voiceVolText.textContent=value+"%";
+
+if(micGain){
+micGain.gain.value=value/100;
+}
+
+});
+
+recordButton.addEventListener("click",async()=>{
+
+if(!micStream||!recordDestination){
+
+recordMessage.textContent="Enable Microphone kwanza.";
+return;
+
+}
+
+try{
+
+await ctx.resume();
+
+chunks=[];
+
+let mime="";
+
+const types=[
+"audio/webm;codecs=opus",
+"audio/webm",
+"audio/ogg;codecs=opus"
+];
+
+for(const type of types){
+
+if(MediaRecorder.isTypeSupported(type)){
+mime=type;
+break;
+}
+
+}
+
+if(mime){
+
+recorder=new MediaRecorder(
+recordDestination.stream,
+{mimeType:mime}
+);
+
+}else{
+
+recorder=new MediaRecorder(
+recordDestination.stream
+);
+
+}
+
+recorder.ondataavailable=(event)=>{
+
+if(event.data&&event.data.size>0){
+chunks.push(event.data);
+}
+
+};
+
+recorder.onstop=finishRecording;
+
+recorder.start(250);
+
+recordingStart=Date.now();
+
+timerInterval=setInterval(updateTimer,500);
+
+recordButton.disabled=true;
+stopButton.disabled=false;
+
+setStatus("RECORDING","rec");
+
+recordMessage.textContent="Recording... Imba juu ya beat.";
+
+recordButton.textContent="⏺ RECORDING";
+
+}catch(error){
+
+console.log(error);
+
+recordMessage.textContent="Recording haikuweza kuanza: "+error.message;
+
+}
+
+});
+
+stopButton.addEventListener("click",()=>{
+
+if(recorder&&recorder.state==="recording"){
+recorder.stop();
+}
+
+if(beatElement&&!beatElement.paused){
+
+beatElement.pause();
+beatElement.currentTime=0;
+beatButton.textContent="▶ PLAY BEAT";
+
+}
+
+});
+
+function finishRecording(){
+
+clearInterval(timerInterval);
+
+const type=recorder.mimeType||"audio/webm";
+
+recordingBlob=new Blob(chunks,{type:type});
+
+if(recordingURL){
+URL.revokeObjectURL(recordingURL);
+}
+
+recordingURL=URL.createObjectURL(recordingBlob);
+
+playRecording.disabled=false;
+downloadRecording.disabled=false;
+
+recordButton.disabled=false;
+stopButton.disabled=true;
+
+recordButton.textContent="⏺ START RECORDING";
+
+timer.textContent="00:00";
+
+setStatus("READY");
+
+recordMessage.textContent="Recording imekamilika.";
+
+resultMessage.textContent=
+"Recording yako iko tayari kucheza au kupakuliwa.";
+
+}
+
+playRecording.addEventListener("click",()=>{
+
+if(!recordingURL)return;
+
+const audio=new Audio(recordingURL);
+
+audio.play();
+
+resultMessage.textContent="▶ Recording inachezwa...";
+
+audio.onended=()=>{
+resultMessage.textContent="Recording iko tayari.";
+};
+
+});
+
+downloadRecording.addEventListener("click",()=>{
+
+if(!recordingURL)return;
+
+const link=document.createElement("a");
+
+link.href=recordingURL;
+link.download="SPEIN-VOICE-"+Date.now()+".webm";
+
+document.body.appendChild(link);
+link.click();
+link.remove();
+
+});
+
+function updateTimer(){
+
+const seconds=Math.floor(
+(Date.now()-recordingStart)/1000
+);
+
+const minutes=Math.floor(seconds/60);
+const secs=seconds%60;
+
+timer.textContent=
+String(minutes).padStart(2,"0")+
+":"+
+String(secs).padStart(2,"0");
+
+}
+
+function resizeCanvas(){
+
+const ratio=window.devicePixelRatio||1;
+
+canvas.width=canvas.clientWidth*ratio;
+canvas.height=canvas.clientHeight*ratio;
+
+canvasCtx.setTransform(
+ratio,
+0,
+0,
+ratio,
+0,
+0
+);
+
+}
+
+window.addEventListener("resize",resizeCanvas);
+
+resizeCanvas();
+
+function drawVisualizer(){
+
+requestAnimationFrame(drawVisualizer);
+
+const width=canvas.clientWidth;
+const height=canvas.clientHeight;
+
+canvasCtx.clearRect(0,0,width,height);
+
+if(!analyser){
+
+canvasCtx.beginPath();
+canvasCtx.moveTo(0,height/2);
+canvasCtx.lineTo(width,height/2);
+canvasCtx.strokeStyle="#222";
+canvasCtx.stroke();
+
+return;
+
+}
+
+const data=new Uint8Array(analyser.fftSize);
+
+analyser.getByteTimeDomainData(data);
+
+canvasCtx.beginPath();
+
+for(let i=0;i<data.length;i++){
+
+const x=i/data.length*width;
+
+const y=(data[i]/255)*height;
+
+if(i===0){
+canvasCtx.moveTo(x,y);
+}else{
+canvasCtx.lineTo(x,y);
+}
+
+}
+
+canvasCtx.strokeStyle="#00eaff";
+canvasCtx.lineWidth=2;
+canvasCtx.stroke();
+
+}
+
+drawVisualizer();
+
+window.addEventListener("beforeunload",()=>{
+
+if(micStream){
+
+micStream.getTracks().forEach(track=>{
+track.stop();
+});
+
+}
+
+if(beatURL){
+URL.revokeObjectURL(beatURL);
+}
+
+if(recordingURL){
+URL.revokeObjectURL(recordingURL);
+}
+
+});
+
+</script>
+
+</body>
+  </html>
